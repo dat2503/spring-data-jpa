@@ -1251,7 +1251,7 @@ class UserRepositoryTests {
 		assertThat(firstWindow.hasNext()).isTrue();
 
 		Window<User> nextWindow = repository.findBy(example,
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(firstWindow.positionAt(1)));
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scrollStartingAfter(firstWindow.positionAt(1)));
 
 		assertThat(nextWindow).containsExactly(john1, john2);
 		assertThat(nextWindow.hasNext()).isFalse();
@@ -1277,7 +1277,7 @@ class UserRepositoryTests {
 		assertThat(firstWindow.hasNext()).isTrue();
 
 		Window<User> nextWindow = repository.findBy(example,
-				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scroll(firstWindow.positionAt(0)));
+				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scrollStartingAfter(firstWindow.positionAt(0)));
 
 		assertThat(nextWindow).containsExactly(jane2, john1);
 		assertThat(nextWindow.hasNext()).isTrue();
@@ -1301,7 +1301,7 @@ class UserRepositoryTests {
 
 		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) firstWindow.positionAt(2);
 		Window<User> previousWindow = repository.findBy(example, q -> q.limit(1)
-				.sortBy(Sort.by("firstname", "emailAddress")).scroll(ScrollPosition.backward(scrollPosition.getKeys())));
+				.sortBy(Sort.by("firstname", "emailAddress")).scrollStartingAfter(ScrollPosition.backward(scrollPosition.getKeys())));
 
 		assertThat(previousWindow).containsOnly(jane2);
 		assertThat(previousWindow.hasNext()).isTrue();
@@ -1327,7 +1327,7 @@ class UserRepositoryTests {
 		assertThat(firstWindow).containsExactly(john1, john2);
 
 		Window<User> previousWindow = repository.findBy(example,
-				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scroll(firstWindow.positionAt(0)));
+				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scrollStartingAfter(firstWindow.positionAt(0)));
 
 		assertThat(previousWindow).containsExactly(jane1, jane2);
 	}
@@ -1349,7 +1349,7 @@ class UserRepositoryTests {
 		assertThat(firstWindow.hasNext()).isTrue();
 
 		Window<User> nextWindow = repository.findBy(QUser.user.firstname.startsWith("J"),
-				q -> q.limit(2).sortBy(Sort.by("firstname")).scroll(firstWindow.positionAt(1)));
+				q -> q.limit(2).sortBy(Sort.by("firstname")).scrollStartingAfter(firstWindow.positionAt(1)));
 
 		assertThat(nextWindow).containsExactly(john1, john2);
 		assertThat(nextWindow.hasNext()).isFalse();
@@ -1372,7 +1372,7 @@ class UserRepositoryTests {
 		assertThat(firstWindow.hasNext()).isTrue();
 
 		Window<User> nextWindow = repository.findBy(QUser.user.firstname.startsWith("J"),
-				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scroll(firstWindow.positionAt(0)));
+				q -> q.limit(2).sortBy(Sort.by("firstname", "emailAddress")).scrollStartingAfter(firstWindow.positionAt(0)));
 
 		assertThat(nextWindow).containsExactly(jane2, john1);
 		assertThat(nextWindow.hasNext()).isTrue();
@@ -1396,7 +1396,7 @@ class UserRepositoryTests {
 
 		KeysetScrollPosition scrollPosition = (KeysetScrollPosition) firstWindow.positionAt(2);
 		Window<User> previousWindow = repository.findBy(QUser.user.firstname.startsWith("J"),
-				q -> q.limit(3).sortBy(Sort.by("firstname", "emailAddress")).scroll(scrollPosition.backward()));
+				q -> q.limit(3).sortBy(Sort.by("firstname", "emailAddress")).scrollStartingAfter(scrollPosition.backward()));
 
 		assertThat(previousWindow).containsExactly(jane1, jane2);
 

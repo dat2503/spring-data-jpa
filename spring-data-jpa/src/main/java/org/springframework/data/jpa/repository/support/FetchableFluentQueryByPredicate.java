@@ -33,6 +33,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.jpa.domain.ScrollOptions;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.jpa.repository.query.ScrollDelegate;
 import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -164,6 +166,22 @@ class FetchableFluentQueryByPredicate<S, R> extends FluentQuerySupport<S, R> imp
 	}
 
 	@Override
+	public Window<R> scrollStartingAt(ScrollPosition scrollPosition) {
+
+		Assert.notNull(scrollPosition, "ScrollPosition must not be null");
+
+		return scroll.scrollStartingAt(sort, limit, scrollPosition).map(getConversionFunction());
+	}
+
+	@Override
+	public Window<R> scrollStartingAfter(ScrollPosition scrollPosition) {
+
+		Assert.notNull(scrollPosition, "ScrollPosition must not be null");
+
+		return scroll.scrollStartingAfter(sort, limit, scrollPosition).map(getConversionFunction());
+	}
+
+	@Override
 	public Page<R> page(Pageable pageable) {
 		return pageable.isUnpaged() ? new PageImpl<>(all()) : readPage(pageable);
 	}
@@ -243,6 +261,24 @@ class FetchableFluentQueryByPredicate<S, R> extends FluentQuerySupport<S, R> imp
 		public Window<T> scroll(Sort sort, int limit, ScrollPosition scrollPosition) {
 
 			Query query = scrollFunction.createQuery(sort, scrollPosition);
+			if (limit > 0) {
+				query = query.setMaxResults(limit);
+			}
+			return scroll(query, sort, scrollPosition);
+		}
+
+		public Window<T> scrollStartingAt(Sort sort, int limit, ScrollPosition scrollPosition) {
+
+			Query query = scrollFunction.createQuery(sort, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
+			if (limit > 0) {
+				query = query.setMaxResults(limit);
+			}
+			return scroll(query, sort, scrollPosition);
+		}
+
+		public Window<T> scrollStartingAfter(Sort sort, int limit, ScrollPosition scrollPosition) {
+
+			Query query = scrollFunction.createQuery(sort, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING));
 			if (limit > 0) {
 				query = query.setMaxResults(limit);
 			}

@@ -51,6 +51,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.convert.QueryByExamplePredicateBuilder;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -499,12 +500,12 @@ public class SimpleJpaRepository<T, ID> implements JpaRepositoryImplementation<T
 		Assert.notNull(spec, "Specification must not be null");
 		Assert.notNull(queryFunction, "Query function must not be null");
 
-		ScrollQueryFactory scrollFunction = (sort, scrollPosition) -> {
+		ScrollQueryFactory scrollFunction = (sort, scrollPosition, options) -> {
 
 			Specification<T> specToUse = spec;
 
 			if (scrollPosition instanceof KeysetScrollPosition keyset) {
-				KeysetScrollSpecification<T> keysetSpec = new KeysetScrollSpecification<>(keyset, sort, entityInformation);
+				KeysetScrollSpecification<T> keysetSpec = new KeysetScrollSpecification<>(keyset, sort, entityInformation, options);
 				sort = keysetSpec.sort();
 				specToUse = specToUse.and(keysetSpec);
 			}
@@ -512,7 +513,7 @@ public class SimpleJpaRepository<T, ID> implements JpaRepositoryImplementation<T
 			TypedQuery<T> query = getQuery(specToUse, domainClass, sort);
 
 			if (scrollPosition instanceof OffsetScrollPosition offset) {
-				query.setFirstResult(Math.toIntExact(offset.getOffset()));
+				query.setFirstResult(Math.toIntExact(offset.getOffset() + (options.getPositionHandling().equals(PositionHandling.INCLUDING) ? 0 : 1)));
 			}
 
 			return query;

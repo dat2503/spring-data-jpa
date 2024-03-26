@@ -26,6 +26,9 @@ import java.util.function.Function;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
+import org.springframework.data.jpa.domain.ScrollOptions;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 
@@ -87,7 +90,10 @@ abstract class FluentQuerySupport<S, R> {
 	}
 
 	interface ScrollQueryFactory {
-		Query createQuery(Sort sort, ScrollPosition scrollPosition);
+		default Query createQuery(Sort sort, ScrollPosition scrollPosition) {
+			return createQuery(sort, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING));
+		}
+		Query createQuery(Sort sort, ScrollPosition scrollPosition, ScrollOptions options);
 	}
 
 }

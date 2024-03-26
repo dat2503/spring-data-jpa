@@ -96,7 +96,7 @@ class RepositoryWithIdClassKeyTests {
 
 		Window<Item> next = itemRepository.findBy((root, query, criteriaBuilder) -> {
 			return criteriaBuilder.isNotNull(root.get("name"));
-		}, q -> q.limit(1).sortBy(Sort.by("name")).scroll(first.positionAt(0)));
+		}, q -> q.limit(1).sortBy(Sort.by("name")).scrollStartingAfter(first.positionAt(0)));
 
 		assertThat(next).containsOnly(item2);
 	}

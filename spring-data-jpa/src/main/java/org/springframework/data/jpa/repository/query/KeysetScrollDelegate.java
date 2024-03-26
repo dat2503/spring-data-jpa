@@ -19,11 +19,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.jpa.domain.ScrollOptions;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.lang.Nullable;
 
 /**
@@ -48,7 +53,7 @@ public class KeysetScrollDelegate {
 	}
 
 	@Nullable
-	public <E, P> P createPredicate(KeysetScrollPosition keyset, Sort sort, QueryStrategy<E, P> strategy) {
+	public <E, P> P createPredicate(KeysetScrollPosition keyset, Sort sort, QueryStrategy<E, P> strategy, ScrollOptions options) {
 
 		Map<String, Object> keysetValues = keyset.getKeys();
 
@@ -95,6 +100,18 @@ public class KeysetScrollDelegate {
 
 		if (or.isEmpty()) {
 			return null;
+		}
+
+
+		// XXX: what if? ScrollPosition.keyset() && Excluding -> should throw an exception
+
+
+		if(options.getPositionHandling().equals(PositionHandling.INCLUDING)) {
+			List<P> sortConstraint = new ArrayList<>();
+			for(Entry<String, Object> entry : keysetValues.entrySet()) {
+				sortConstraint.add(strategy.eq(strategy.createExpression(entry.getKey()), entry.getValue()));
+			}
+			or.add(0, strategy.and(sortConstraint));;
 		}
 
 		return strategy.or(or);
@@ -166,6 +183,8 @@ public class KeysetScrollDelegate {
 		 * @return an object representing the comparison predicate.
 		 */
 		P compare(Order order, E propertyExpression, Object value);
+
+		P eq(E expression, Object value);
 
 		/**
 		 * Create an equals-comparison object.

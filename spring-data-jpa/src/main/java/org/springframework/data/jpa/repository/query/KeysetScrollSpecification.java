@@ -29,6 +29,7 @@ import java.util.List;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.jpa.domain.ScrollOptions;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.KeysetScrollDelegate.QueryStrategy;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -43,13 +44,14 @@ import org.springframework.lang.Nullable;
  * @since 3.1
  */
 public record KeysetScrollSpecification<T> (KeysetScrollPosition position, Sort sort,
-		JpaEntityInformation<?, ?> entity) implements Specification<T> {
+		JpaEntityInformation<?, ?> entity, ScrollOptions options) implements Specification<T> {
 
-	public KeysetScrollSpecification(KeysetScrollPosition position, Sort sort, JpaEntityInformation<?, ?> entity) {
+	public KeysetScrollSpecification(KeysetScrollPosition position, Sort sort, JpaEntityInformation<?, ?> entity, ScrollOptions options) {
 
 		this.position = position;
 		this.entity = entity;
 		this.sort = createSort(position, sort, entity);
+		this.options = options;
 	}
 
 	/**
@@ -92,7 +94,7 @@ public record KeysetScrollSpecification<T> (KeysetScrollPosition position, Sort 
 	public Predicate createPredicate(Root<?> root, CriteriaBuilder criteriaBuilder) {
 
 		KeysetScrollDelegate delegate = KeysetScrollDelegate.of(position.getDirection());
-		return delegate.createPredicate(position, sort, new JpaQueryStrategy(root, criteriaBuilder));
+		return delegate.createPredicate(position, sort, new JpaQueryStrategy(root, criteriaBuilder), options);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -119,6 +121,11 @@ public record KeysetScrollSpecification<T> (KeysetScrollPosition position, Sort 
 
 			return order.isAscending() ? cb.greaterThan(propertyExpression, (Comparable) value)
 					: cb.lessThan(propertyExpression, (Comparable) value);
+		}
+
+		@Override
+		public Predicate eq(Expression<Comparable> expression, Object value) {
+			return cb.equal(expression, value);
 		}
 
 		@Override

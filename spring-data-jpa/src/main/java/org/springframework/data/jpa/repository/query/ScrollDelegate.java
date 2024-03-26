@@ -28,6 +28,7 @@ import org.springframework.data.domain.ScrollPosition.Direction;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.domain.Window;
+import org.springframework.data.jpa.domain.ScrollOptions;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.util.Assert;
 
@@ -71,6 +72,7 @@ public class ScrollDelegate<T> {
 		}
 
 		if (scrollPosition instanceof OffsetScrollPosition offset) {
+
 			return createWindow(result, limit, OffsetScrollPosition.positionFunction(offset.getOffset()));
 		}
 

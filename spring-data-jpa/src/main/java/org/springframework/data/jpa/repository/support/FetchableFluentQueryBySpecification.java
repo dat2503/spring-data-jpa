@@ -33,6 +33,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
+import org.springframework.data.jpa.domain.ScrollOptions;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.ScrollDelegate;
 import org.springframework.data.jpa.support.PageableUtils;
@@ -152,7 +154,21 @@ class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySupport<S, R>
 
 		Assert.notNull(scrollPosition, "ScrollPosition must not be null");
 
-		return scroll.scroll(sort, limit, scrollPosition).map(getConversionFunction());
+		return scroll.scroll(sort, limit, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING)).map(getConversionFunction());
+	}
+
+	@Override
+	public Window<R> scrollStartingAfter(ScrollPosition scrollPosition) {
+		Assert.notNull(scrollPosition, "ScrollPosition must not be null");
+
+		return scroll.scroll(sort, limit, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.EXCLUDING)).map(getConversionFunction());
+	}
+
+	@Override
+	public Window<R> scrollStartingAt(ScrollPosition scrollPosition) {
+		Assert.notNull(scrollPosition, "ScrollPosition must not be null");
+
+		return scroll.scroll(sort, limit, scrollPosition, new ScrollOptions().positionHandling(PositionHandling.INCLUDING)).map(getConversionFunction());
 	}
 
 	@Override
@@ -231,9 +247,9 @@ class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySupport<S, R>
 			this.scrollFunction = scrollQueryFactory;
 		}
 
-		public Window<T> scroll(Sort sort, int limit, ScrollPosition scrollPosition) {
+		public Window<T> scroll(Sort sort, int limit, ScrollPosition scrollPosition, ScrollOptions options) {
 
-			Query query = scrollFunction.createQuery(sort, scrollPosition);
+			Query query = scrollFunction.createQuery(sort, scrollPosition, options);
 
 			if (limit > 0) {
 				query = query.setMaxResults(limit);

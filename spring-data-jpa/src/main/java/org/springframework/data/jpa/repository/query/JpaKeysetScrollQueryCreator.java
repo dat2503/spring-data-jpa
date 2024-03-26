@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.ScrollOptions;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -41,15 +42,17 @@ class JpaKeysetScrollQueryCreator extends JpaQueryCreator {
 
 	private final JpaEntityInformation<?, ?> entityInformation;
 	private final KeysetScrollPosition scrollPosition;
+	private final ScrollOptions scrollOptions;
 
 	public JpaKeysetScrollQueryCreator(PartTree tree, ReturnedType type, CriteriaBuilder builder,
 			ParameterMetadataProvider provider, JpaEntityInformation<?, ?> entityInformation,
-			KeysetScrollPosition scrollPosition) {
+			KeysetScrollPosition scrollPosition, ScrollOptions options) {
 
 		super(tree, type, builder, provider);
 
 		this.entityInformation = entityInformation;
 		this.scrollPosition = scrollPosition;
+		this.scrollOptions = options;
 	}
 
 	@Override
@@ -57,7 +60,7 @@ class JpaKeysetScrollQueryCreator extends JpaQueryCreator {
 			CriteriaBuilder builder, Root<?> root) {
 
 		KeysetScrollSpecification<Object> keysetSpec = new KeysetScrollSpecification<>(scrollPosition, sort,
-				entityInformation);
+				entityInformation, scrollOptions);
 		Predicate keysetPredicate = keysetSpec.createPredicate(root, builder);
 
 		CriteriaQuery<?> queryToUse = super.complete(predicate, keysetSpec.sort(), query, builder, root);

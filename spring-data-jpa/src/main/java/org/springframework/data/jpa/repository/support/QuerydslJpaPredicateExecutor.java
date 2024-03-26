@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.query.KeysetScrollDelegate;
 import org.springframework.data.jpa.repository.query.KeysetScrollDelegate.QueryStrategy;
@@ -175,7 +176,7 @@ public class QuerydslJpaPredicateExecutor<T> implements QuerydslPredicateExecuto
 			return select;
 		};
 
-		ScrollQueryFactory scroll = (sort, scrollPosition) -> {
+		ScrollQueryFactory scroll = (sort, scrollPosition, options) -> {
 
 			Predicate predicateToUse = predicate;
 
@@ -183,7 +184,7 @@ public class QuerydslJpaPredicateExecutor<T> implements QuerydslPredicateExecuto
 
 				KeysetScrollDelegate delegate = KeysetScrollDelegate.of(keyset.getDirection());
 				sort = KeysetScrollSpecification.createSort(keyset, sort, entityInformation);
-				BooleanExpression keysetPredicate = delegate.createPredicate(keyset, sort, scrollQueryAdapter);
+				BooleanExpression keysetPredicate = delegate.createPredicate(keyset, sort, scrollQueryAdapter, options);
 
 				if (keysetPredicate != null) {
 					predicateToUse = predicate instanceof BooleanExpression be ? be.and(keysetPredicate)
@@ -196,7 +197,7 @@ public class QuerydslJpaPredicateExecutor<T> implements QuerydslPredicateExecuto
 			select = (AbstractJPAQuery<?, ?>) querydsl.applySorting(sort, select);
 
 			if (scrollPosition instanceof OffsetScrollPosition offset) {
-				select.offset(offset.getOffset());
+				select.offset(offset.getOffset() + (options.getPositionHandling().equals(PositionHandling.INCLUDING) ? 0 : 1));
 			}
 
 			return select.createQuery();
@@ -346,6 +347,12 @@ public class QuerydslJpaPredicateExecutor<T> implements QuerydslPredicateExecuto
 		public BooleanExpression compare(Expression<?> propertyExpression, @Nullable Object value) {
 			return Expressions.booleanOperation(Ops.EQ, propertyExpression,
 					value == null ? NullExpression.DEFAULT : ConstantImpl.create(value));
+		}
+
+		@Override
+		public BooleanExpression eq(Expression<?> expression, Object value) {
+			return Expressions.booleanOperation(Ops.EQ, expression,
+					ConstantImpl.create(value));
 		}
 
 		@Override

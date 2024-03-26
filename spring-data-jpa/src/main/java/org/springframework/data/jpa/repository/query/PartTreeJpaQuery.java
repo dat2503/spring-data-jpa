@@ -28,6 +28,8 @@ import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.ScrollOptions;
+import org.springframework.data.jpa.domain.ScrollOptions.PositionHandling;
 import org.springframework.data.jpa.repository.query.JpaParameters.JpaParameter;
 import org.springframework.data.jpa.repository.query.JpaQueryExecution.DeleteExecution;
 import org.springframework.data.jpa.repository.query.JpaQueryExecution.ExistsExecution;
@@ -324,7 +326,8 @@ public class PartTreeJpaQuery extends AbstractJpaQuery {
 			}
 
 			if (accessor != null && accessor.getScrollPosition() instanceof KeysetScrollPosition keyset) {
-				return new JpaKeysetScrollQueryCreator(tree, returnedType, builder, provider, entityInformation, keyset);
+				ScrollOptions options = accessor.getScrollPosition().isInitial() ? new ScrollOptions().positionHandling(PositionHandling.INCLUDING) : new ScrollOptions().positionHandling(PositionHandling.EXCLUDING);
+				return new JpaKeysetScrollQueryCreator(tree, returnedType, builder, provider, entityInformation, keyset, options);
 			}
 
 			return new JpaQueryCreator(tree, returnedType, builder, provider);
